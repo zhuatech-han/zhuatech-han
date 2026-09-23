@@ -1,0 +1,123 @@
+# Runtime: Git and Python 3 on GitHub's ubuntu-latest runner; no pip dependencies.
+# Setup: repository Actions secrets GITEE_TOKEN and GITCODE_TOKEN, with Git write access.
+# Usage: edit README.md on main, or Actions > Sync profiles > Run workflow.
+# Missing credentials are reported as NOT CONFIGURED; previews never push.
+name: Sync profiles
+
+on:
+  push:
+    branches: [main]
+    paths: [README.md, README.en.md, .github/workflows/sync-profiles.yml]
+  workflow_dispatch:
+    inputs:
+      preview:
+        description: Preview only (do not publish)
+        type: boolean
+        default: true
+
+permissions: {}
+concurrency:
+  group: sync-profiles
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'zhuatech-han/zhuatech-han' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: gitee
+            url: https://gitee.com/zhuatech-han/zhuatech-han.git
+            branch: master
+            secret: GITEE_TOKEN
+          - platform: atomgit
+            url: https://gitcode.com/zhuatech-han/zhuatech-han.git
+            branch: main
+            secret: GITCODE_TOKEN
+    steps:
+      - name: Read latest GitHub source
+        run: git clone --quiet --depth 1 --single-branch --branch main https://github.com/zhuatech-han/zhuatech-han.git source
+      - name: Publish platform-specific introductions
+        env:
+          SYNC_TOKEN: ${{ secrets[matrix.secret] }}
+          SYNC_PLATFORM: ${{ matrix.platform }}
+          SYNC_URL: ${{ matrix.url }}
+          SYNC_BRANCH: ${{ matrix.branch }}
+          SYNC_SECRET_NAME: ${{ matrix.secret }}
+          SYNC_PREVIEW: ${{ inputs.preview == true && 'true' || 'false' }}
+        shell: python
+        run: |
+          import os
+          import pathlib
+          import subprocess
+          import tempfile
+
+          platform = os.environ['SYNC_PLATFORM']
+          preview = os.environ['SYNC_PREVIEW'] == 'true'
+          token = os.environ.get('SYNC_TOKEN', '')
+          summary = pathlib.Path(os.environ['GITHUB_STEP_SUMMARY'])
+
+          def report(message):
+              print(platform + ': ' + message)
+              with summary.open('a', encoding='utf-8') as stream:
+                  stream.write('- ' + platform + ': ' + message + '\n')
+
+          if not token and not preview:
+              report('NOT CONFIGURED: add repository secret ' + os.environ['SYNC_SECRET_NAME'])
+              print('::warning::Synchronization is not enabled for ' + platform)
+              raise SystemExit(0)
+
+          source = pathlib.Path('source').resolve()
+          if not (source / 'README.md').is_file():
+              raise SystemExit('Source README.md is missing; nothing was changed.')
+
+          with tempfile.TemporaryDirectory() as folder:
+              root = pathlib.Path(folder)
+              askpass = root / 'askpass.sh'
+              askpass.write_text('#!/bin/sh\ncase "$1" in\n*Username*) printf "%s\\n" "zhuatech-han" ;;\n*Password*) printf "%s\\n" "$SYNC_TOKEN" ;;\nesac\n')
+              askpass.chmod(0o700)
+              env = dict(os.environ, GIT_ASKPASS=str(askpass), GIT_TERMINAL_PROMPT='0')
+
+              def git(*args, cwd=None):
+                  result = subprocess.run(
+                      ['git', '-c', 'credential.helper=', *args],
+                      cwd=cwd, env=env, text=True, capture_output=True, timeout=180,
+                  )
+                  if result.returncode:
+                      error = result.stderr.replace(token, '[redacted]') if token else result.stderr
+                      raise RuntimeError(error)
+                  return result.stdout.strip()
+
+              target = root / 'target'
+              branch = os.environ['SYNC_BRANCH']
+              git('clone', '--quiet', '--depth', '1', '--single-branch', '--branch', branch,
+                  os.environ['SYNC_URL'], str(target))
+              changed = []
+              for name in ('README.md', 'README.en.md'):
+                  original = source / name
+                  if not original.is_file():
+                      continue
+                  output = original.read_text(encoding='utf-8').replace(
+                      'utm_source=github', 'utm_source=' + platform)
+                  destination = target / name
+                  if destination.is_symlink():
+                      raise RuntimeError('Refusing to replace a symbolic link: ' + name)
+                  if destination.exists() and destination.read_text(encoding='utf-8') == output:
+                      continue
+                  destination.write_text(output, encoding='utf-8')
+                  changed.append(name)
+              if not changed:
+                  report('Up to date; no commit needed.')
+              elif preview:
+                  report('PREVIEW ONLY: would update ' + ', '.join(changed))
+              else:
+                  git('config', 'user.name', 'zhuatech-han', cwd=target)
+                  git('config', 'user.email', 'zhuatech-han@users.noreply.github.com', cwd=target)
+                  git('add', '--', *changed, cwd=target)
+                  revision = git('rev-parse', '--short', 'HEAD', cwd=source)
+                  git('commit', '-m', 'docs: sync GitHub profile ' + revision, cwd=target)
+                  git('push', 'origin', 'HEAD:refs/heads/' + branch, cwd=target)
+                  report('Published ' + ', '.join(changed) + ' from GitHub ' + revision)
