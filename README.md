@@ -10,6 +10,8 @@
   </p>
 </div>
 
+**平台主页：** [GitHub](https://github.com/zhuatech-han) · [Gitee](https://gitee.com/zhuatech-han) · [GitCode](https://gitcode.com/zhuatech-han)
+
 ---
 
 欢迎来到 **zhuatech-han**。这里是知华科技团队成员的业务与技术主页，重点关注企业 AI 应用、业务系统开发和源码二次开发。
