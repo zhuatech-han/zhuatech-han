@@ -1,3 +1,5 @@
+[中文](README.md) | [English](README.en.md)
+
 <div align="center">
   <img src="https://www.zhuatech.cn/assets/img/zhihua-logo.jpg" alt="知华科技 Logo" width="96" height="96" />
   <h1>知华科技 · ZhuaTech</h1>
@@ -40,7 +42,7 @@
 
 [浏览更多团队项目 →](https://github.com/zhihua-tech?tab=repositories)
 
-> 上述项目为社区源码版，具体功能与使用范围以各仓库 README 和 LICENSE 为准。商业使用、项目交付和深度定制请先沟通授权与实施方案。
+> 上述项目为源码公开、非商业使用的学习版，具体已实现功能、配置、运行方法、测试、部署、限制与授权以各仓库 README 和 LICENSE 为准。仅限个人学习交流；未经上海如静知华信息科技有限公司书面授权不得商用。第三方组件保留其原有许可，不因本主页的品牌介绍而改变。商业使用、项目交付和深度定制请先沟通授权与实施方案。
 
 ## 如何开始合作
 
@@ -52,6 +54,17 @@
 不必先准备完整需求书。带着一个具体场景，就可以开始沟通。
 
 **[前往官网咨询项目 →](https://www.zhuatech.cn/contact.html?utm_source=github&utm_medium=profile&utm_campaign=zhuatech-han)**
+
+## 联系知华科技
+
+商业授权或深度定制开发请联系知华科技。
+
+- 官网：[https://www.zhuatech.cn/](https://www.zhuatech.cn/)
+- 微信：`zhuatech`、`zhuatech2`
+
+<table><tr><td align="center"><img src="https://raw.githubusercontent.com/zhuatech-han/zhuatech-crm/6591a0047d6900ddd82d7264bd2b751a118ed514/docs/images/zhuatech-wechat-consulting.png" height="200" alt="知华科技微信 zhuatech"><br>微信：zhuatech</td><td align="center"><img src="https://raw.githubusercontent.com/zhuatech-han/zhuatech-crm/6591a0047d6900ddd82d7264bd2b751a118ed514/docs/images/zhuatech-wechat-consulting-2.png" height="200" alt="知华科技微信 zhuatech2"><br>微信：zhuatech2</td></tr></table>
+
+本仓库是账号介绍与项目索引，没有独立业务系统、用户端、管理端或数据库。项目环境要求、安装启动、数据库初始化、配置、测试、部署及问题反馈，请进入对应项目仓库查阅；主页不承诺各项目已接通第三方服务或适用于生产环境。普通源码问题在对应仓库反馈；涉及凭证或客户资料的安全问题通过官网或咨询微信私下联系。
 
 ---
 
